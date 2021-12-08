@@ -256,7 +256,7 @@ class AT_CL_model(LightningModule):
         self.val_weights = val_weights
         self.test_weights = test_weights
         self.epoch_length = epoch_length
-        self.save_hyperparameters()   
+        self.save_hyperparameters()
 
         ## Loading EEG pretrained model and freezed (NOT_USED) ##
         self.model_eeg = UTimeModel(self.hparams)
