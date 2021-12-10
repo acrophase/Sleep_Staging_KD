@@ -8,6 +8,7 @@ import random
 import mne
 from scipy import signal
 from sklearn import preprocessing
+import argparse
 
 # SS1_Channels = ['EOG Left Horiz', 'EOG Right Horiz', 'EMG Chin1', 'EMG Chin2', 'EMG Chin3', 'EEG F3-CLE', 'EEG F4-CLE', 'EEG C3-CLE', 'EEG C4-CLE', 'EEG O1-CLE', 'EEG O2-CLE', 'ECG ECGI', 'EMG Ant Tibial L', 'EMG Ant Tibial R', 'Resp Thermistor', 'Resp Cannula', 'Resp Belt Thor', 'Resp Belt Abdo', 'EEG F7-CLE', 'EEG F8-CLE', 'EEG T3-CLE', 'EEG T4-CLE', 'EEG T5-CLE', 'EEG T6-CLE', 'EEG P3-CLE', 'EEG P4-CLE', 'EEG Fz-CLE', 'EEG Cz-CLE', 'EEG Pz-CLE', 'EEG A2-CLE', 'SaO2 SaO2']
 # SS2_Channels = ['EEG Fp1-CLE', 'EEG Fp2-CLE', 'EEG F3-CLE', 'EEG F4-CLE', 'EEG F7-CLE', 'EEG F8-CLE', 'EEG C3-CLE', 'EEG C4-CLE', 'EEG P3-CLE', 'EEG P4-CLE', 'EEG O1-CLE', 'EEG O2-CLE', 'EEG T3-CLE', 'EEG T4-CLE', 'EEG T5-CLE', 'EEG T6-CLE', 'EEG Fpz-CLE', 'EEG Cz-CLE', 'EEG Pz-CLE', 'EOG Upper Vertic', 'EOG Lower Vertic', 'EOG Left Horiz', 'EOG Right Horiz', 'EMG Chin', 'ECG ECGI', 'Resp Nasal', 'EEG A2-CLE']
@@ -30,9 +31,11 @@ class MassDataset(Dataset):
     def  __init__(
         self,
         data_dir=None,
+        save_path=None,
     ):
         super().__init__()
         self.data_dir = data_dir
+        self.save_path = save_path
         self.MASS_files = glob.glob(os.path.join(self.data_dir,'*_EDF'))         #### MASS_dataset subset folders
         self.MASS_files.sort()
         self.AASM = [self.MASS_files[0],self.MASS_files[2]]  ## TAKING SS1 and SS3
@@ -108,7 +111,7 @@ class MassDataset(Dataset):
                 ## NORMALIZATION AND WINDOWING OF INPUT SIGNALS
                 windowed_ecg2 = [signal.resample(min_max_scaler.fit_transform(ecg2[i * fs * sleep_epoch_len:(i+1) * fs * sleep_epoch_len].reshape(-1,1)).T.squeeze(0), resamp_srate*sleep_epoch_len) for i in range(num_windows)]# if fs != resamp_srate]
                 windowed_eegc3a2 = [signal.resample(min_max_scaler.fit_transform(eegc3a2[i * fs * sleep_epoch_len:(i+1) * fs * sleep_epoch_len].reshape(-1,1)).T.squeeze(0), resamp_srate*sleep_epoch_len) for i in range(num_windows)]# if fs != resamp_srate]
-                
+
                 if index in train_ids:
 
                     self.ecg_train2 = torch.cat([self.ecg_train2,torch.tensor(windowed_ecg2)], dim=0)
@@ -157,7 +160,7 @@ class MassDataset(Dataset):
         #### SAVING TRAIN-VAL-TEST DATA in PT_Files #####
         import pdb;pdb.set_trace()
 
-        save_path = '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/ALL_DATA/AASM/'
+        save_path = self.save_path
 
         self.train_data = torch.stack([self.eeg_trainc3a2,self.ecg_train2],dim=0)
         torch.save(self.train_data, save_path + 'eeg_ecg_1ch_train.pt')
@@ -184,11 +187,21 @@ class MassDataset(Dataset):
         return self.n_slpstg
 
 
-data_path = "/media/Sentinel_2/Dataset/Vaibhav/MASS/MASS_BIOSIG/"
-                                                                                     
+def argparsing():
+    parser = argparse.ArgumentParser(description='RUN EEG Baseline')
+    # parser.add_argument("--data_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/ALL_DATA/AASM/", help= 'Enter path to data PT files')
+    parser.add_argument("--data_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/MASS_BIOSIG/", help= 'Enter path to data')
+    parser.add_argument("--save_path", default='/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/POCT/4_class/AASM/', help= 'Enter path to save files')
+    
+    args = parser.parse_args()
+    return args
+
 if __name__ == "__main__":
 
     np.random.seed(42)
     random.seed(42)
-    
-    MassDataset(data_dir=data_path)
+
+    args= argparsing()
+    data_path= args.data_path
+    save_path = args.save_path
+    MassDataset(data_dir=data_path, save_path=save_path)

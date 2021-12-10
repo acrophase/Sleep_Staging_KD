@@ -8,6 +8,7 @@ import random
 import mne
 from scipy import signal
 from sklearn import preprocessing
+import argparse
 
 # SS1_Channels = ['EOG Left Horiz', 'EOG Right Horiz', 'EMG Chin1', 'EMG Chin2', 'EMG Chin3', 'EEG F3-CLE', 'EEG F4-CLE', 'EEG C3-CLE', 'EEG C4-CLE', 'EEG O1-CLE', 'EEG O2-CLE', 'ECG ECGI', 'EMG Ant Tibial L', 'EMG Ant Tibial R', 'Resp Thermistor', 'Resp Cannula', 'Resp Belt Thor', 'Resp Belt Abdo', 'EEG F7-CLE', 'EEG F8-CLE', 'EEG T3-CLE', 'EEG T4-CLE', 'EEG T5-CLE', 'EEG T6-CLE', 'EEG P3-CLE', 'EEG P4-CLE', 'EEG Fz-CLE', 'EEG Cz-CLE', 'EEG Pz-CLE', 'EEG A2-CLE', 'SaO2 SaO2']
 # SS2_Channels = ['EEG Fp1-CLE', 'EEG Fp2-CLE', 'EEG F3-CLE', 'EEG F4-CLE', 'EEG F7-CLE', 'EEG F8-CLE', 'EEG C3-CLE', 'EEG C4-CLE', 'EEG P3-CLE', 'EEG P4-CLE', 'EEG O1-CLE', 'EEG O2-CLE', 'EEG T3-CLE', 'EEG T4-CLE', 'EEG T5-CLE', 'EEG T6-CLE', 'EEG Fpz-CLE', 'EEG Cz-CLE', 'EEG Pz-CLE', 'EOG Upper Vertic', 'EOG Lower Vertic', 'EOG Left Horiz', 'EOG Right Horiz', 'EMG Chin', 'ECG ECGI', 'Resp Nasal', 'EEG A2-CLE']
@@ -30,13 +31,15 @@ class MassDataset(Dataset):
     def  __init__(
         self,
         data_dir=None,
+        save_path=None,
     ):
         super().__init__()
         self.data_dir = data_dir
+        self.save_path = save_path
         self.MASS_files = glob.glob(os.path.join(self.data_dir,'*_EDF'))         #### MASS_dataset subset folders
         self.MASS_files.sort()
-        self.AASM = [self.MASS_files[0],self.MASS_files[2]]
-        self.RK = [self.MASS_files[1],self.MASS_files[3],self.MASS_files[4]]
+        self.AASM = [self.MASS_files[0],self.MASS_files[2]]  ## TAKING SS1 and SS3
+        self.RK = [self.MASS_files[1],self.MASS_files[3],self.MASS_files[4]] ## TAKING SS2,SS4 and SS5
 
         self.ecg_train2 = torch.Tensor([])
         self.eeg_trainc3a2 = torch.Tensor([])
@@ -72,8 +75,7 @@ class MassDataset(Dataset):
                 annot_filename = (os.path.join(os.path.dirname(biosig_files[0]), file[-18:-8] + ' Base.edf'))
                 base4 = mne.read_annotations(annot_filename)  ##### BASE FILE CONTAIN SLEEP STAGES
                 sleep_stages = [sleep_stage[-1] for sleep_stage in base4.description]
-                # slp_coarse_map = {"?" : -2,"W" : 0,"1" : 1,"2" : 1,"3" : 2,"4" : 2,"R" : 3}  ## 4 Class
-                slp_coarse_map = {"?" : -2,"W" : 0,"1" : 1,"2" : 1,"3" : 1,"4" : 1,"R" : 2}   ## 3 Class
+                slp_coarse_map = {"?" : -2,"W" : 0,"1" : 1,"2" : 1,"3" : 1,"4" : 1,"R" : 2}  ## 3 Class
                 slp_stg_coarse = list(map(slp_coarse_map.get,sleep_stages))
                 sleep_epoch_len = 20  # in seconds
                 
@@ -95,16 +97,17 @@ class MassDataset(Dataset):
                     eegc3a2= psg4[EEGC_ch[0]][0][0]   # Getting C3 channel (IN SS5)
 
                 ## ECG SIGNAL EXTRACTION FROM SUITABLE CHANNELS
-                if outer_index == 1:  ## FOR SS4 ECG lead 2 to be used as available
-                    ECG_ch = ['ECG ECGII']
-                else:
-                    ECG_ch = [i for i in psg4.ch_names if i.startswith('ECG ECG')]
+                # if outer_index == 1:  ## FOR SS4 ECG lead 2 to be used as available
+                #     ECG_ch = ['ECG ECGII']
+                # else:
+                #     ECG_ch = [i for i in psg4.ch_names if i.startswith('ECG ECG')]
+                ECG_ch = ['ECG ECGI']
 
                 ecg2= (-1)*psg4[ECG_ch[0]][0][0]    # Inverse of ideal waveform was available from dataset, so correcting it by * (-1)
 
                 # import pdb;pdb.set_trace()
                 ##### ONSET OF ANNOTATION ####
-                annot_onset = base4.onset[0] # value in seconds
+                annot_onset = base4.onset[0] ## value in seconds
                 #### Eliminating signal with no annotation
                 ecg2 = ecg2[int(annot_onset)*fs::]
                 eegc3a2 = eegc3a2[int(annot_onset)*fs::]
@@ -115,38 +118,32 @@ class MassDataset(Dataset):
                 
                 min_max_scaler = preprocessing.MinMaxScaler()
                 
-                # import pdb;pdb.set_trace()
                 ## NORMALIZATION AND WINDOWING OF INPUT SIGNALS
                 new_sleep_epoch_len = 30
                 windowed_ecg2_30s = [signal.resample(min_max_scaler.fit_transform(ecg2[((i+1) * fs * sleep_epoch_len) - (fs*5) : ((i+2) * fs * sleep_epoch_len)+(fs*5)].reshape(-1,1)).squeeze(1), resamp_srate*new_sleep_epoch_len) for i in range(num_windows-2)]# if fs != resamp_srate]
                 windowed_eegc3a2_30s = [signal.resample(min_max_scaler.fit_transform(eegc3a2[((i+1) * fs * sleep_epoch_len)- (fs*5) : ((i+2)* fs * sleep_epoch_len) + (fs*5)].reshape(-1,1)).squeeze(1), resamp_srate*new_sleep_epoch_len) for i in range(num_windows-2)]# if fs != resamp_srate]
-            
 
                 if index in train_ids:
 
                     self.ecg_train2 = torch.cat([self.ecg_train2,torch.tensor(windowed_ecg2_30s)], dim=0)
                     self.eeg_trainc3a2 = torch.cat([self.eeg_trainc3a2,torch.tensor(windowed_eegc3a2_30s)], dim=0)
                     self.slp_stg_train = torch.cat([self.slp_stg_train,torch.tensor(slp_stg_coarse[1:num_windows-1])])
-                    
-                    # self.slp_stg_train = torch.cat([self.slp_stg_train,torch.tensor(slp_stg_coarse[1:num_windows])])
 
                 elif index in val_ids:
 
                     self.ecg_val2 = torch.cat([self.ecg_val2,torch.tensor(windowed_ecg2_30s)], dim=0)
                     self.eeg_valc3a2 = torch.cat([self.eeg_valc3a2,torch.tensor(windowed_eegc3a2_30s)], dim=0)
                     self.slp_stg_val = torch.cat([self.slp_stg_val,torch.tensor(slp_stg_coarse[1:num_windows-1])])
-                    
-                    # self.slp_stg_val = torch.cat([self.slp_stg_val,torch.tensor(slp_stg_coarse[1:num_windows])])
 
                 elif index in test_ids:
 
                     self.ecg_test2 = torch.cat([self.ecg_test2,torch.tensor(windowed_ecg2_30s)], dim=0)
                     self.eeg_testc3a2 = torch.cat([self.eeg_testc3a2,torch.tensor(windowed_eegc3a2_30s)], dim=0)
                     self.slp_stg_test = torch.cat([self.slp_stg_test,torch.tensor(slp_stg_coarse[1:num_windows-1])])
-                    
-                    # self.slp_stg_test = torch.cat([self.slp_stg_test,torch.tensor(slp_stg_coarse[0:num_windows])])
-                    
 
+                print(self.ecg_train2.shape)
+                print(self.ecg_val2.shape)
+                print(self.ecg_test2.shape)
                 self.n_slpstg += num_windows
             
             ### Removing -2 labels from train data
@@ -174,7 +171,7 @@ class MassDataset(Dataset):
         #### SAVING TRAIN-VAL-TEST DATA in PT_Files #####
         import pdb;pdb.set_trace()
 
-        save_path = '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/3class/ALL_DATA/R_K/30s/'
+        save_path = self.save_path
 
         self.train_data = torch.stack([self.eeg_trainc3a2,self.ecg_train2],dim=0)
         torch.save(self.train_data, save_path + 'eeg_ecg_1ch_train.pt')
@@ -201,11 +198,21 @@ class MassDataset(Dataset):
         return self.n_slpstg
 
 
-data_path = "/media/Sentinel_2/Dataset/Vaibhav/MASS/MASS_BIOSIG/"
-                                                                                     
+def argparsing():
+    parser = argparse.ArgumentParser(description='RUN EEG Baseline')
+    # parser.add_argument("--data_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/ALL_DATA/AASM/", help= 'Enter path to data PT files')
+    parser.add_argument("--data_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/MASS_BIOSIG/", help= 'Enter path to data')
+    parser.add_argument("--save_path", default='/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/POCT/3_class/R_K_30s/', help= 'Enter path to save files')
+    
+    args = parser.parse_args()
+    return args
+
 if __name__ == "__main__":
 
     np.random.seed(42)
     random.seed(42)
-    
-    MassDataset(data_dir=data_path)
+
+    args= argparsing()
+    data_path= args.data_path
+    save_path = args.save_path
+    MassDataset(data_dir=data_path, save_path=save_path)
