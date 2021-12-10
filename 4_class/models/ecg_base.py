@@ -217,7 +217,6 @@ class ECG_BASE_Model(LightningModule):
         )
         nn.init.xavier_uniform_(self.dense[0].weight)
         nn.init.zeros_(self.dense[0].bias)
-        
         self.segment_classifier = SegmentClassifier(
             sampling_frequency=self.hparams.sampling_frequency,
             num_classes=self.hparams.num_classes,
@@ -314,7 +313,7 @@ class ECG_BASE_Model(LightningModule):
         # train_df['y_train'] = torch.argmax(y_train, dim = 2).cpu().numpy().ravel()
         # self.TRAIN_df = self.TRAIN_df.append(train_df, ignore_index=True)
 
-         ## Logging loss
+        ## Logging loss
         self.log('train_loss', loss_train,     on_step=True,  on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
         
         return {
@@ -331,7 +330,7 @@ class ECG_BASE_Model(LightningModule):
         y_train_total = self.y_train_acc
         
         print(self.train_conf_matrix_accumulated(pred_train_total.squeeze(1), torch.argmax(y_train_total, dim = 2).squeeze(1)))
-        train_CK_accumulated = self.train_cohenkappa_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
+        # train_CK_accumulated = self.train_cohenkappa_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
         train_F1_accumulated = self.train_f1_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
         train_sklearn_accuracy = accuracy_score(torch.argmax(pred_train_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_train_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -340,7 +339,7 @@ class ECG_BASE_Model(LightningModule):
         f1_score = self.train_f1_stages(pred_train_total.squeeze(1), torch.argmax(y_train_total, dim = 2).squeeze(1))
         f1_dict = {'W_train_f1':f1_score[0], 'L_train_f1':f1_score[1], 'D_train_f1':f1_score[2], 'R_train_f1':f1_score[3]}
 
-        self.log('train_CK_accumulated', train_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
+        # self.log('train_CK_accumulated', train_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('train_F1_accumulated', train_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('train_acc_sklearn_accumulated', train_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -376,8 +375,8 @@ class ECG_BASE_Model(LightningModule):
         # self.VAL_df = self.VAL_df.append(val_df, ignore_index=True)
 
         ## Logging loss
-        self.log('val_loss', loss_val,       on_step=True,  on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
-              
+        self.log('val_loss', loss_val,       on_step=True, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
+            
         return {
             'val_loss': loss_val,
             'pred_val': pred_val,
@@ -392,7 +391,7 @@ class ECG_BASE_Model(LightningModule):
         y_val_total = self.y_val_acc
 
         print(self.val_conf_matrix_accumulated(pred_val_total.squeeze(1), torch.argmax(y_val_total, dim = 2).squeeze(1)))
-        val_CK_accumulated = self.val_cohenkappa_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
+        # val_CK_accumulated = self.val_cohenkappa_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         val_F1_accumulated = self.val_f1_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         val_sklearn_accuracy = accuracy_score(torch.argmax(pred_val_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_val_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -401,7 +400,7 @@ class ECG_BASE_Model(LightningModule):
         f1_score = self.val_f1_stages(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         f1_dict = {'W_val_f1':f1_score[0], 'L_val_f1':f1_score[1], 'D_val_f1':f1_score[2], 'R_val_f1':f1_score[3]}
 
-        self.log('val_CK_accumulated', val_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
+        # self.log('val_CK_accumulated', val_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('val_F1_accumulated', val_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('val_acc_sklearn_accumulated', val_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -426,7 +425,7 @@ class ECG_BASE_Model(LightningModule):
         
         loss_test,pred_test, y_test = self.compute_loss(pred_test, y_test, class_weights)
         
-        
+
         self.pred_test_acc = torch.cat([self.pred_test_acc,pred_test], dim = 0)
         self.y_test_acc = torch.cat([self.y_test_acc,y_test], dim = 0)
 
@@ -436,10 +435,10 @@ class ECG_BASE_Model(LightningModule):
         # self.TEST_df = self.TEST_df.append(test_df, ignore_index=True)
 
         ## Metric ##
-        test_CK = self.test_cohenkappa(pred_test.squeeze(1),torch.argmax(y_test, dim = 2).squeeze(1))
-        print(test_CK)
+        # test_CK = self.test_cohenkappa(pred_test.squeeze(1),torch.argmax(y_test, dim = 2).squeeze(1))
+        # print(test_CK)
         print(self.test_conf_matrix(pred_test.squeeze(1), torch.argmax(y_test, dim = 2).squeeze(1)))
-        
+
         ## Logging loss
         self.log('test_loss', loss_test,       on_step=True,  on_epoch=True, prog_bar=True,  logger=True, sync_dist=True)
         
@@ -462,7 +461,7 @@ class ECG_BASE_Model(LightningModule):
         y_test_total = self.y_test_acc
 
         print(self.test_conf_matrix_accumulated(pred_test_total.squeeze(1), torch.argmax(y_test_total, dim = 2).squeeze(1)))
-        test_CK_accumulated = self.test_cohenkappa_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
+        # test_CK_accumulated = self.test_cohenkappa_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         test_F1_accumulated = self.test_f1_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         test_sklearn_accuracy = accuracy_score(torch.argmax(pred_test_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_test_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -471,7 +470,7 @@ class ECG_BASE_Model(LightningModule):
         f1_score = self.test_f1_stages(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         f1_dict = {'W_test_f1':f1_score[0], 'L_test_f1':f1_score[1], 'D_test_f1':f1_score[2], 'R_test_f1':f1_score[3]}
 
-        self.log('test_CK_accumulated', test_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
+        # self.log('test_CK_accumulated', test_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('test_F1_accumulated', test_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('test_acc_sklearn_accumulated', test_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
