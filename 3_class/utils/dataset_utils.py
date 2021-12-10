@@ -7,9 +7,9 @@ def get_data(args):
     dm.setup("fit")
     dm.setup("test")
 
-    try:
-        args.cb_weights = dm.train.dataset.cb_weights
-    except AttributeError:
-        pass
+    # try:
+    #     args.cb_weights = dm.train.dataset.cb_weights
+    # except AttributeError:
+    #     pass
 
     return dm, args

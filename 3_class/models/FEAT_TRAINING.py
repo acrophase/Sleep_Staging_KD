@@ -347,7 +347,6 @@ class FEAT_TRAINING_model(LightningModule):
     
     def training_step(self, batch_train, batch_idx):
         [eeg_train,ecg_train,y_train] = batch_train
-
         ## Choose modalities to train
         x_train_eeg = eeg_train.unsqueeze(1)
         x_train_ecg = ecg_train.unsqueeze(1) 
@@ -380,7 +379,7 @@ class FEAT_TRAINING_model(LightningModule):
         y_train_total = self.y_train_acc
 
         print(self.train_conf_matrix_accumulated(pred_train_total.squeeze(1), torch.argmax(y_train_total, dim = 2).squeeze(1)))
-        train_CK_accumulated = self.train_cohenkappa_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
+        # train_CK_accumulated = self.train_cohenkappa_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
         train_F1_accumulated = self.train_f1_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
         train_sklearn_accuracy = accuracy_score(torch.argmax(pred_train_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_train_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -389,7 +388,7 @@ class FEAT_TRAINING_model(LightningModule):
         f1_score = self.train_f1_stages(pred_train_total.squeeze(1), torch.argmax(y_train_total, dim = 2).squeeze(1))
         f1_dict = {'W_train_f1':f1_score[0], 'NREM_train_f1':f1_score[1], 'R_train_f1':f1_score[2]}
 
-        self.log('train_CK_accumulated', train_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
+        # self.log('train_CK_accumulated', train_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('train_F1_accumulated', train_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('train_acc_sklearn_accumulated', train_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -436,7 +435,7 @@ class FEAT_TRAINING_model(LightningModule):
         y_val_total = self.y_val_acc
 
         print(self.val_conf_matrix_accumulated(pred_val_total.squeeze(1), torch.argmax(y_val_total, dim = 2).squeeze(1)))
-        val_CK_accumulated = self.val_cohenkappa_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
+        # val_CK_accumulated = self.val_cohenkappa_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         val_F1_accumulated = self.val_f1_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         val_sklearn_accuracy = accuracy_score(torch.argmax(pred_val_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_val_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -445,7 +444,7 @@ class FEAT_TRAINING_model(LightningModule):
         f1_score = self.val_f1_stages(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         f1_dict = {'W_val_f1':f1_score[0], 'NREM_val_f1':f1_score[1], 'R_val_f1':f1_score[2]}
 
-        self.log('val_CK_accumulated', val_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
+        # self.log('val_CK_accumulated', val_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('val_F1_accumulated', val_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('val_acc_sklearn_accumulated', val_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -476,8 +475,8 @@ class FEAT_TRAINING_model(LightningModule):
         self.y_test_acc = torch.cat([self.y_test_acc,y_test], dim = 0)
 
         ## Metric ##
-        test_CK = self.test_cohenkappa(pred_test_ecg.squeeze(1), torch.argmax(y_test, dim = 2).squeeze(1))
-        print(test_CK)
+        # test_CK = self.test_cohenkappa(pred_test_ecg.squeeze(1), torch.argmax(y_test, dim = 2).squeeze(1))
+        # print(test_CK)
         print(self.test_conf_matrix(pred_test_ecg.squeeze(1), torch.argmax(y_test, dim = 2).squeeze(1)))
 
         ## Logging metrics
@@ -498,7 +497,7 @@ class FEAT_TRAINING_model(LightningModule):
         y_test_total = self.y_test_acc
 
         print(self.test_conf_matrix_accumulated(pred_test_total.squeeze(1), torch.argmax(y_test_total, dim = 2).squeeze(1)))
-        test_CK_accumulated = self.test_cohenkappa_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
+        # test_CK_accumulated = self.test_cohenkappa_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         test_F1_accumulated = self.test_f1_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         test_sklearn_accuracy = accuracy_score(torch.argmax(pred_test_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_test_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -507,7 +506,7 @@ class FEAT_TRAINING_model(LightningModule):
         f1_score = self.test_f1_stages(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         f1_dict = {'W_test_f1':f1_score[0], 'NREM_test_f1':f1_score[1], 'R_test_f1':f1_score[2]}
 
-        self.log('test_CK_accumulated', test_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
+        # self.log('test_CK_accumulated', test_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('test_F1_accumulated', test_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('test_acc_sklearn_accumulated', test_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -536,8 +535,7 @@ class FEAT_TRAINING_model(LightningModule):
         loss_ecg = self.wce_loss(y_pred_ecg.squeeze(1), torch.argmax(y_true, dim = 2).squeeze(1))
         
       
-
-        ### Attention Loss for Feature Loss ###
+        ## Attention Loss for Feature Loss ###
         all_layer_loss = []
         for i in range(len(y_feature_list_eeg)):
             

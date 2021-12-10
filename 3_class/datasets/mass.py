@@ -122,8 +122,8 @@ class MassDataModule(pl.LightningDataModule):
         # DATASET specific
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         dataset_group = parser.add_argument_group("dataset")
-        dataset_group.add_argument("--aasm_data_dir", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/3class/ALL_DATA/AASM/", help= 'Enter path to data PT files')
-        dataset_group.add_argument("--rk_data_dir", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/3class/ALL_DATA/R_K/30s/", help= 'Enter path to data PT files')
+        dataset_group.add_argument("--aasm_data_dir", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/POCT/3_class/AASM/", help= 'Enter path to data PT files')
+        dataset_group.add_argument("--rk_data_dir", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/POCT/3_class/R_K_30s/", help= 'Enter path to data PT files')
 
         # DATALOADER specific
         dataloader_group = parser.add_argument_group("dataloader")
@@ -141,8 +141,8 @@ if __name__ == "__main__":
 
     dm_params = dict(
         batch_size=256,
-        aasm_data_dir='/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/3class/ALL_DATA/AASM/',
-        rk_data_dir='/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/3class/ALL_DATA/R_K/30s/',
+        aasm_data_dir='/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/POCT/3_class/AASM/',
+        rk_data_dir='/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/POCT/3_class/R_K_30s/',
         n_workers=32,
     )
 

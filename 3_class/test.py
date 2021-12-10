@@ -13,8 +13,8 @@ def args_help():
     print( '--dataset_type(str): "mass"' )
     print( '--model_type(str): Any model from Models folder' )
     print( '--model_ckpt_name(str): Required name for ckpt as per model type' )
-    print( '--ckpt_monitor(str): Metric to be monitor for ckpt saving   Default=val_CK_accumulated')
-    print( '--ckpt_mode(str): "min" or "max" mode for ckpt saving       Default=max')
+    print( '--ckpt_monitor(str): Metric to be monitor for ckpt saving   Default=val_F1_accumulated')
+    print( '--ckpt_mode(str): "min" or "max" mode for ckpt saving   Default=max')
     
     ### For FEAT_TRAINING and KD_TEMP codes
     print( '--eeg_baseline_model(str): Path to eeg-baseline-ckpt' )
