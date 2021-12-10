@@ -8,7 +8,7 @@ def get_callbacks(ckpt_monitor, ckpt_name, mode):
         checkpoint_callback = ModelCheckpoint(
                                         # monitor='val_CK_accumulated',
                                         monitor=ckpt_monitor,
-                                        filename= ckpt_name + '{epoch:02d}-{val_CK_accumulated:.4f}',
+                                        filename= ckpt_name + '{epoch:02d}-{val_F1_accumulated:.4f}',
                                         verbose=True,
                                         auto_insert_metric_name= True,
                                         save_top_k=2,

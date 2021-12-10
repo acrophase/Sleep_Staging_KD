@@ -21,7 +21,8 @@ def get_args():
 
     ### args realted to callbacks for Trainer
     parser.add_argument("--model_ckpt_name", default=None, type=str, nargs='?', help= 'Enter the name for ckpt saving')
-    parser.add_argument("--ckpt_monitor", default= 'val_CK_accumulated', type = str, help= 'Metric to monitor to save the ckpt')
+    # parser.add_argument("--ckpt_monitor", default= 'val_CK_accumulated', type = str, help= 'Metric to monitor to save the ckpt')
+    parser.add_argument("--ckpt_monitor", default= 'val_F1_accumulated', type = str, help= 'Metric to monitor to save the ckpt')
     parser.add_argument("--ckpt_mode", default= 'max', type = str, help= 'Mode for the ckpt_monitor metric to save the ckpt')
     temp_args, _ = parser.parse_known_args()
 
