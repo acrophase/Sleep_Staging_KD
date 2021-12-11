@@ -1,16 +1,17 @@
+
 # Sleep_Staging_Knowledge Distillation
+
 This codebase implements knowledge distillation approach for ECG based sleep staging assisted by EEG based sleep staging model. Knowledge distillation is incorporated here by softmax distillation and another approach by Attention transfer based feature training. The combination of both is the proposed model.
 
-Single-channel ECG based sleep staging is improved as conclusion.
 
-# Research
-## Datasets
+## RESEARCH
+### DATASET
 
 [Montreal Archive of Sleep Studies (MASS)](http://ceams-carsm.ca/en/MASS/) - Complete 200 subject data used.
 - SS1 and SS3 subsets follow AASM guidelines
 - SS2, SS4, SS5 subsets follow R_K guidelines
 
-## Knowledge Distillation Framework
+### KNOWLEDGE DISTILLATION FRAMEWORK
  Knowledge distillation framework using minor modifications in [U-Time](https://arxiv.org/abs/1910.11162) as base model.
 
  
@@ -29,27 +30,44 @@ Case 1 : KD_model predicting correctly, ECG_Base predicting incorrectly
 
 Case 2 : KD_model predicting incorrectly, ECG_Base predicting correctly
 
-# Directory Structure
+## Run Training
+Run train.py from 3-class or 4-class directories
 
-## Neccessary arguments to run with scripts for training
+To train baseline models
+```bash
+  python train.py --model_type <"base model type"> --model_ckpt_name <"ckpt name">
+```
 
-> --dataset_type(str): "mass"
+To run Knowledge Distillation
+- Feature Training
+```bash
+  python train.py --model_type "feat_train" --model_ckpt_name <"ckpt name"> --eeg_baseline_path <"eeg base ckpt path">
+```
+- Feat_Temp (AT+SD+CL)
+```bash
+  python train.py --model_type "Feat_Temp" --model_ckpt_name <"ckpt name"> --feat_path <"path to feature trained ckpt">
+```
+- Feat_WCE (AT+CL)
+```bash
+  python train.py --model_type "feat_wce" --model_ckpt_name <"ckpt name"> --feat_path <"path to feature trained ckpt">
+```
+- KD-Temp (SD+CL)
+```bash
+  python train.py --model_type "kd_temp" --model_ckpt_name <"ckpt name"> --eeg_baseline_path <"eeg base ckpt path">
+```
 
->--model_type(str): Any model from Models folder
+## Run Testing
+Run test.py from 3-class or 4-class directories
 
->--model_ckpt_name(str): Required name for ckpt as per model type
+To test from checkpoints
+```bash
+  python test.py --model_type <"model type"> --test_ckpt <"Path to checkpoint>
+```
+Other arguments can be used for training and testing as per requirements
 
->--ckpt_monitor(str): Metric to be monitor for ckpt saving Default=val_F1_accumulated')
+## Directory Map
 
->--ckpt_mode(str): "min" or "max" mode for ckpt saving  Default=max')
-
-- For FEAT_TRAINING and KD_TEMP codes
->--eeg_baseline_model(str): Path to eeg-baseline-ckpt' )
-
-- For FEAT_WCE and FEAT_TEMP codes
->--feat_path(str): Path to feat-trained model ckpt' )
-
-## Dataset Spliting: 
+### Dataset Spliting: 
 Splits Data in train-val-test for 4-class and 3-class cases (AASM and R_K both)
 ```
 ├─ Dataset_split
@@ -58,7 +76,7 @@ Splits Data in train-val-test for 4-class and 3-class cases (AASM and R_K both)
    ├── Data_split_AllData_30s_R_K.py
    └── Data_split_All_Data_AASM.py
 ```
-## 3 Class Classification: 
+### 3 Class Classification: 
 Run train.py with neccessary arguments for training 3-class sleep staging
 ```
 ├── 3_class
@@ -84,7 +102,7 @@ Run train.py with neccessary arguments for training 3-class sleep staging
 │       ├── dataset_utils.py
 │       └── model_utils.py
 ```
-## 4 Class Classification: 
+### 4 Class Classification: 
 Run train.py with neccessary arguments for training 4-class sleep staging
 ```       
 ├── 4_class
@@ -110,4 +128,8 @@ Run train.py with neccessary arguments for training 4-class sleep staging
 │       ├── dataset_utils.py
 │       └── model_utils.py
 ```
+## Acknowledgements
 
+ - [U-Time model pytorch implementation](https://github.com/neergaard/utime-pytorch)
+ - [Pytorch-Lightning](https://github.com/PyTorchLightning/pytorch-lightning)
+ 
