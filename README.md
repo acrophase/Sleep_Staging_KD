@@ -3,6 +3,7 @@
 
 This codebase implements knowledge distillation approach for ECG based sleep staging assisted by EEG based sleep staging model. Knowledge distillation is incorporated here by softmax distillation and another approach by Attention transfer based feature training. The combination of both is the proposed model.
 
+The code implementation is done with Pytorch-lightning framework. Dependencies can be found in [requirements.txt](https://github.com/HTIC-HPOC/Sleep_Staging_KD/blob/main/requirements.txt)
 
 ## RESEARCH
 ### DATASET
@@ -133,3 +134,6 @@ Run train.py with neccessary arguments for training 4-class sleep staging
  - [U-Time model pytorch implementation](https://github.com/neergaard/utime-pytorch)
  - [Pytorch-Lightning](https://github.com/PyTorchLightning/pytorch-lightning)
  
+## Authors
+
+- [@vaibhavjoshi](https://github.com/VAIBHAV2900)
