@@ -21,14 +21,6 @@ def args_help():
     ### For FEAT_WCE and FEAT_TEMP codes
     print( '--feat_path(str): Path to feat-trained model ckpt' )
 
-'''
-## Ckpts from the POCT logs ##
-ECG_BASE_ckpt = "/media/Sentinel_2/Pose2/Vaibhav/MASS_CODE/Sleep_Joint_Learning/POCT/lightning_logs/version_66/checkpoints/ECG_base100epoch=05-val_CK_accumulated=0.2364.ckpt"
-EEG_BASE_ckpt = '/media/Sentinel_2/Pose2/Vaibhav/MASS_CODE/Sleep_Joint_Learning/POCT/lightning_logs/version_67/checkpoints/EEG_base100epoch=21-val_CK_accumulated=0.7740.ckpt'
-KD_TEMP_ckpt = '/media/Sentinel_2/Pose2/Vaibhav/MASS_CODE/Sleep_Joint_Learning/POCT/lightning_logs/version_73/checkpoints/ECG_KD_CE_TEMPLOSS(0.2,4)_AASM_epoch=139-val_CK_accumulated=0.244367.ckpt'
-FEAT_WCE_ckpt = '/media/Sentinel_2/Pose2/Vaibhav/MASS_CODE/Sleep_Joint_Learning/POCT/lightning_logs/version_76/checkpoints/ECG_feat_KD_training_ALLDATA_epoch=23-val_CK_accumulated=0.255825.ckpt'
-FEAT_TEMP_ckpt = '/media/Sentinel_2/Pose2/Vaibhav/MASS_CODE/Sleep_Joint_Learning/POCT/lightning_logs/version_77/checkpoints/ECG_feat_KD_training_ALLDATA_epoch=105-val_CK_accumulated=0.236543.ckpt'
-'''
 
 def run_testing(args):
     

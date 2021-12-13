@@ -5,10 +5,9 @@ import models
 
 
 def get_args():
-    # import pdb;pdb.set_trace()
+
     parser = argparse.ArgumentParser(add_help=False)
     # Check the supplied model type
-    # parser.add_argument("--dataset_type", type=str, default=data)
     parser.add_argument("--dataset_type", default="mass", type=str,help= 'Enter the name of the data')
     
     ## When testing from ckpt ##
@@ -21,7 +20,6 @@ def get_args():
 
     ### args realted to callbacks for Trainer
     parser.add_argument("--model_ckpt_name", default=None, type=str, nargs='?', help= 'Enter the name for ckpt saving')
-    # parser.add_argument("--ckpt_monitor", default= 'val_CK_accumulated', type = str, help= 'Metric to monitor to save the ckpt')
     parser.add_argument("--ckpt_monitor", default= 'val_F1_accumulated', type = str, help= 'Metric to monitor to save the ckpt')
     parser.add_argument("--ckpt_mode", default= 'max', type = str, help= 'Mode for the ckpt_monitor metric to save the ckpt')
     temp_args, _ = parser.parse_known_args()

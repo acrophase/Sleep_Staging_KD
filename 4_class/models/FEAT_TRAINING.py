@@ -379,7 +379,6 @@ class FEAT_TRAINING_model(LightningModule):
         y_train_total = self.y_train_acc
 
         print(self.train_conf_matrix_accumulated(pred_train_total.squeeze(1), torch.argmax(y_train_total, dim = 2).squeeze(1)))
-        # train_CK_accumulated = self.train_cohenkappa_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
         train_F1_accumulated = self.train_f1_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
         train_sklearn_accuracy = accuracy_score(torch.argmax(pred_train_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_train_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -388,7 +387,6 @@ class FEAT_TRAINING_model(LightningModule):
         f1_score = self.train_f1_stages(pred_train_total.squeeze(1), torch.argmax(y_train_total, dim = 2).squeeze(1))
         f1_dict = {'W_train_f1':f1_score[0], 'L_train_f1':f1_score[1], 'D_train_f1':f1_score[2], 'R_train_f1':f1_score[3]}
 
-        # self.log('train_CK_accumulated', train_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('train_F1_accumulated', train_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('train_acc_sklearn_accumulated', train_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -397,8 +395,6 @@ class FEAT_TRAINING_model(LightningModule):
         # Resetting Storage Tensors after every epoch
         self.pred_train_acc = torch.Tensor([]).cuda()
         self.y_train_acc = torch.Tensor([]).cuda()
-        
-        # pass
     
     def validation_step(self, batch_eval, batch_idx):
 
@@ -435,7 +431,6 @@ class FEAT_TRAINING_model(LightningModule):
         y_val_total = self.y_val_acc
 
         print(self.val_conf_matrix_accumulated(pred_val_total.squeeze(1), torch.argmax(y_val_total, dim = 2).squeeze(1)))
-        # val_CK_accumulated = self.val_cohenkappa_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         val_F1_accumulated = self.val_f1_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         val_sklearn_accuracy = accuracy_score(torch.argmax(pred_val_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_val_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -444,7 +439,6 @@ class FEAT_TRAINING_model(LightningModule):
         f1_score = self.val_f1_stages(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
         f1_dict = {'W_val_f1':f1_score[0], 'L_val_f1':f1_score[1], 'D_val_f1':f1_score[2], 'R_val_f1':f1_score[3]}
 
-        # self.log('val_CK_accumulated', val_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('val_F1_accumulated', val_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('val_acc_sklearn_accumulated', val_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -453,7 +447,6 @@ class FEAT_TRAINING_model(LightningModule):
         # Resetting Storage Tensors after every epoch
         self.pred_val_acc = torch.Tensor([]).cuda()
         self.y_val_acc = torch.Tensor([]).cuda()
-        # pass
     
     def test_step(self, batch_test, batch_idx):
         
@@ -475,8 +468,6 @@ class FEAT_TRAINING_model(LightningModule):
         self.y_test_acc = torch.cat([self.y_test_acc,y_test], dim = 0)
 
         ## Metric ##
-        # test_CK = self.test_cohenkappa(pred_test_ecg.squeeze(1), torch.argmax(y_test, dim = 2).squeeze(1))
-        # print(test_CK)
         print(self.test_conf_matrix(pred_test_ecg.squeeze(1), torch.argmax(y_test, dim = 2).squeeze(1)))
 
         ## Logging metrics
@@ -484,12 +475,9 @@ class FEAT_TRAINING_model(LightningModule):
         self.log('test_Feature_Loss', test_feature_loss,        on_step=True, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('test_loss_eeg', test_loss_eeg,                on_step=True, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         
-        # y_1s_eeg, feature_dict_eeg, y_1s_ecg, feature_dict_ecg = self.classify_segments(x_test_eeg.float(), x_test_ecg.float(), resolution=1)
         
         return {
             'test_Feature_Loss': test_feature_loss,
-            # 'logits_eeg': y_1s_eeg,
-            # 'logits_ecg': y_1s_ecg
         }
     
     def test_epoch_end(self, test_step_outputs):
@@ -497,7 +485,6 @@ class FEAT_TRAINING_model(LightningModule):
         y_test_total = self.y_test_acc
 
         print(self.test_conf_matrix_accumulated(pred_test_total.squeeze(1), torch.argmax(y_test_total, dim = 2).squeeze(1)))
-        # test_CK_accumulated = self.test_cohenkappa_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         test_F1_accumulated = self.test_f1_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         test_sklearn_accuracy = accuracy_score(torch.argmax(pred_test_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_test_total, dim = 2).squeeze(1).cpu().numpy())
         
@@ -506,7 +493,6 @@ class FEAT_TRAINING_model(LightningModule):
         f1_score = self.test_f1_stages(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
         f1_dict = {'W_test_f1':f1_score[0], 'L_test_f1':f1_score[1], 'D_test_f1':f1_score[2], 'R_test_f1':f1_score[3]}
 
-        # self.log('test_CK_accumulated', test_CK_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('test_F1_accumulated', test_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log('test_acc_sklearn_accumulated', test_sklearn_accuracy,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
         self.log_dict(acc_dict,                             on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -515,8 +501,6 @@ class FEAT_TRAINING_model(LightningModule):
         # Resetting Storage Tensors after every epoch
         self.pred_test_acc = torch.Tensor([]).cuda()
         self.y_test_acc = torch.Tensor([]).cuda()
-        
-        # pass
     
     def compute_loss(self, y_pred_eeg, y_feature_list_eeg, y_pred_ecg, y_feature_list_ecg, y_true, class_weights):
         
@@ -567,8 +551,6 @@ class FEAT_TRAINING_model(LightningModule):
                 loss = reduce((lambda x,y : x + y),feat_l1_loss)  / len(feat_l1_loss)
 
             all_layer_loss.append(loss)
-        # feat_no = 1    ### 0=encoder layers, 1=bottleneck, 2=decoder layers, 3=afterdecoder, 4=dense
-        # feat_loss = all_layer_loss[feat_no]  ### selective feat
         feat_loss = sum(all_layer_loss)/len(all_layer_loss)   #### ALL features combined
         
         return feat_loss, loss_eeg, loss_ecg, y_pred_eeg, y_pred_ecg, y_true
@@ -587,7 +569,7 @@ class FEAT_TRAINING_model(LightningModule):
         architecture_group.add_argument('--num_classes', default=4, type=int)
         architecture_group.add_argument('--epoch_length', default=30, type=int)
         architecture_group.add_argument("--eeg_baseline_path", default=None, help= 'Enter checkpoint path to trained features from Feature_Training')
-        # /media/Sentinel_2/Pose2/Vaibhav/MASS_CODE/Sleep_Joint_Learning/MODULED/lightning_logs/version_10/checkpoints/EEG_BASE100epoch=01-val_CK_accumulated=0.7393.ckpt
+        
         # OPTIMIZER specific
         optimizer_group = parser.add_argument_group('optimizer')
         optimizer_group.add_argument('--lr', default=1e-3, type=float)
