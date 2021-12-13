@@ -97,11 +97,10 @@ class MassDataset(Dataset):
                     eegc3a2= psg4[EEGC_ch[0]][0][0]   # Getting C3 channel (IN SS5)
 
                 ## ECG SIGNAL EXTRACTION FROM SUITABLE CHANNELS
-                # if outer_index == 1:  ## FOR SS4 ECG lead 2 to be used as available
-                #     ECG_ch = ['ECG ECGII']
-                # else:
-                #     ECG_ch = [i for i in psg4.ch_names if i.startswith('ECG ECG')]
-                ECG_ch = ['ECG ECGI']
+                if outer_index == 1:  ## FOR SS4 ECG lead 2 to be used as available
+                    ECG_ch = ['ECG ECGII']
+                else:
+                    ECG_ch = [i for i in psg4.ch_names if i.startswith('ECG ECG')]
 
                 ecg2= (-1)*psg4[ECG_ch[0]][0][0]    # Inverse of ideal waveform was available from dataset, so correcting it by * (-1)
 
