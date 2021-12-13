@@ -136,4 +136,4 @@ Run train.py with neccessary arguments for training 4-class sleep staging
  
 ## Authors
 
-- [@vaibhavjoshi](https://github.com/VAIBHAV2900)
+- [vaibhav joshi](https://github.com/VAIBHAV2900)
