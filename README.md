@@ -35,6 +35,7 @@ Case 2 : KD_model predicting incorrectly, ECG_Base predicting correctly
 Run train.py from 3-class or 4-class directories
 
 To train baseline models
+
 ```bash
   python train.py --model_type <"base model type"> --model_ckpt_name <"ckpt name">
 ```
@@ -65,6 +66,9 @@ To test from checkpoints
   python test.py --model_type <"model type"> --test_ckpt <"Path to checkpoint>
 ```
 Other arguments can be used for training and testing as per requirements
+
+## Reproducing experiments
+Checkpoints to reproduce the test results can be found in [this link](https://drive.google.com/drive/folders/1Vy_ieBrNydkJ-s20Xg79gpWjVsJzxk8y?usp=sharing)
 
 ## Directory Map
 
