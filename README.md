@@ -95,6 +95,7 @@ To run the experiment on RTX-3090, the dependencies were saved as a docker image
 <ins>
 To run the experiments on OTHER than RTX-3090 GPU Follow the below steps
 </ins>
+
 - Navigate to the desired directory and Install requirements
 
 ```bash
