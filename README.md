@@ -86,7 +86,7 @@ To run the experiment on RTX-3090, the dependencies were saved as a docker image
 
 - Run the docker container
 ```bash
-  sudo docker run --gpus all 
+  sudo docker run --gpus all <"docker_name">
 ```
   <!-- # --ipc=host -it -v /media/acrophase:/media <"docker_name"> -->
 
