@@ -3,7 +3,7 @@
 
 This codebase implements knowledge distillation approach for ECG based sleep staging assisted by EEG based sleep staging model. Knowledge distillation is incorporated here by softmax distillation and another approach by Attention transfer based feature training. The combination of both is the proposed model.
 
-The code implementation is done with Pytorch-lightning framework. Dependencies can be found in [requirements.txt](https://github.com/HTIC-HPOC/Sleep_Staging_KD/blob/main/requirements.txt)
+The code implementation was done with Pytorch-lightning framework inside a docker container. Dependencies to be installed inside the docker can be found in [requirements.txt](https://github.com/HTIC-HPOC/Sleep_Staging_KD/blob/main/requirements.txt)
 
 ## RESEARCH
 ### DATASET
@@ -67,8 +67,25 @@ To test from checkpoints
 ```
 Other arguments can be used for training and testing as per requirements
 
-## Reproducing experiments
+<h2>
+<details> <summary> Reproducing experiments </summary><br/>
+<h6>
+
+Coming Soon ...
+<!-- Create a docker container
+```bash
+  sudo docker run --gpus all --ipc=host -it -v /media/acrophase:/media <"docker name">
+```
+
+ Navigate to the directory and Install requirements inside the docker
+
+```bash
+  pip install -r requirements.txt
+``` -->
+
 Checkpoints to reproduce the test results can be found in [this link](https://drive.google.com/drive/folders/1Vy_ieBrNydkJ-s20Xg79gpWjVsJzxk8y?usp=sharing)
+
+</details>
 
 ## Directory Map
 
