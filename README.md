@@ -71,9 +71,9 @@ Other arguments can be used for training and testing as per requirements
 <details> <summary> Reproducing experiments </summary><br/>
 <h6>
 
-<!-- Coming Soon ... -->
+Coming Soon ...
 
-<ins>
+<!-- <ins>
 To run the experiment on RTX-3090, the dependencies were saved as a docker image. Follow the below steps to run on RTX-3090
 </ins>
 
@@ -87,15 +87,16 @@ To run the experiment on RTX-3090, the dependencies were saved as a docker image
 - Run the docker container
 ```bash
   sudo docker run --gpus all <"docker_name">
-```
+``` -->
   <!-- # --ipc=host -it -v /media/acrophase:/media <"docker_name"> -->
 
-- Run training/testing shown in Run Training / Run Testing section.
+<!-- - Run training/testing shown in Run Training / Run Testing section.
 
 <ins>
 To run the experiments on OTHER than RTX-3090 GPU Follow the below steps
 </ins>
 
+- Make sure neccessary cuda drivers are available and installed
 - Navigate to the desired directory and Install requirements
 
 ```bash
@@ -105,7 +106,7 @@ To run the experiments on OTHER than RTX-3090 GPU Follow the below steps
 
 Checkpoints to reproduce the test results can be found in [this link](https://drive.google.com/drive/folders/1Vy_ieBrNydkJ-s20Xg79gpWjVsJzxk8y?usp=sharing)
 
-</details>
+</details> -->
 
 ## Directory Map
 
