@@ -88,11 +88,11 @@ To run the experiment on RTX-3090, the dependencies were saved as a docker image
 ```bash
   sudo docker run --gpus all <"docker_name">
 ``` -->
-  <!-- # --ipc=host -it -v /media/acrophase:/media <"docker_name"> -->
+<!-- --ipc=host -it -v /media/acrophase:/media <"docker_name"> 
 
-<!-- - Run training/testing shown in Run Training / Run Testing section.
+- Run training/testing shown in Run Training / Run Testing section. -->
 
-<ins>
+<!-- <ins>
 To run the experiments on OTHER than RTX-3090 GPU Follow the below steps
 </ins>
 
@@ -104,9 +104,9 @@ To run the experiments on OTHER than RTX-3090 GPU Follow the below steps
 ```
 - Run training/testing shown in Run Training / Run Testing section.
 
-Checkpoints to reproduce the test results can be found in [this link](https://drive.google.com/drive/folders/1Vy_ieBrNydkJ-s20Xg79gpWjVsJzxk8y?usp=sharing)
+Checkpoints to reproduce the test results can be found in [this link](https://drive.google.com/drive/folders/1Vy_ieBrNydkJ-s20Xg79gpWjVsJzxk8y?usp=sharing) --> -->
 
-</details> -->
+</details>
 
 ## Directory Map
 
