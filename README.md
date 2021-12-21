@@ -1,10 +1,15 @@
 
 # Sleep_Staging_Knowledge Distillation
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/a-deep-knowledge-distillation-framework-for/w-r-l-d-sleep-staging-on-montreal-archive-of)](https://paperswithcode.com/sota/w-r-l-d-sleep-staging-on-montreal-archive-of?p=a-deep-knowledge-distillation-framework-for)
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/a-deep-knowledge-distillation-framework-for/w-r-n-sleep-staging-on-montreal-archive-of)](https://paperswithcode.com/sota/w-r-n-sleep-staging-on-montreal-archive-of?p=a-deep-knowledge-distillation-framework-for)
+
 This codebase implements knowledge distillation approach for ECG based sleep staging assisted by EEG based sleep staging model. Knowledge distillation is incorporated here by softmax distillation and another approach by Attention transfer based feature training. The combination of both is the proposed model.
 
 The code implementation was done with Pytorch-lightning framework inside a docker container. Dependencies used inside the docker can be found in [requirements.txt](https://github.com/HTIC-HPOC/Sleep_Staging_KD/blob/main/requirements.txt)
 
+Experiments can be reproduced by following the procedure mentioned in [Reproducibility](https://github.com/Acrophase/Sleep_Staging_KD#--reproducing-experiments-coming-soon----) section
 ## RESEARCH
 ### DATASET
 
@@ -47,7 +52,7 @@ To run Knowledge Distillation
 ```
 - Feat_Temp (AT+SD+CL)
 ```bash
-  python train.py --model_type "Feat_Temp" --model_ckpt_name <"ckpt name"> --feat_path <"path to feature trained ckpt">
+  python train.py --model_type "feat_temp" --model_ckpt_name <"ckpt name"> --feat_path <"path to feature trained ckpt">
 ```
 - Feat_WCE (AT+CL)
 ```bash
