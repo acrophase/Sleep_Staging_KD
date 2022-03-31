@@ -86,7 +86,7 @@ class MassDataModuleGen(pl.LightningDataModule):
             test_ids = ids[int(len(biosig_files) * 0.9):]
             
             
-            for (index,file) in enumerate(biosig_files[0:10]):
+            for (index,file) in enumerate(biosig_files):
                 
                 ### ANNOTATION PROCESSING
                 annot_filename = (os.path.join(os.path.dirname(biosig_files[0]), file[-18:-8] + ' Base.edf'))
@@ -192,7 +192,7 @@ class MassDataModuleGen(pl.LightningDataModule):
             test_ids = ids[int(len(biosig_files) * 0.9):]
             
             
-            for (index,file) in enumerate(biosig_files[0:10]):
+            for (index,file) in enumerate(biosig_files):
                 ### ANNOTATION PROCESSING
                 annot_filename = (os.path.join(os.path.dirname(biosig_files[0]), file[-18:-8] + ' Base.edf'))
                 base4 = mne.read_annotations(annot_filename)  ##### BASE FILE CONTAIN SLEEP STAGES
