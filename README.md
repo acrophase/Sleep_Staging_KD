@@ -10,8 +10,6 @@ This codebase implements knowledge distillation approach for ECG based sleep sta
 The code implementation was done with Pytorch-lightning framework inside a docker container. Dependencies used inside the docker can be found in [requirements.txt](https://github.com/HTIC-HPOC/Sleep_Staging_KD/blob/main/requirements.txt)
 
 Experiments can be reproduced by following the procedure mentioned in [Reproducibility](https://github.com/Acrophase/Sleep_Staging_KD#--reproducing-experiments-coming-soon----) section
-
-The code will be updated with generator for dataset to tackle memory constraints.
 ## RESEARCH
 ### DATASET
 
