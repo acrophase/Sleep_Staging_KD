@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import Dataset
 import pytorch_lightning as pl 
 import numpy as np
+import pandas as pd
 import glob
 import random
 import mne
@@ -54,10 +55,10 @@ class MassDataset(Dataset):
         self.slp_stg_test = torch.Tensor([])
         
         self.n_slpstg=0
-
+        self.batch_size = 256
         
+        count = 0
         for (outer_index,subset) in enumerate(self.AASM):
-            # import pdb;pdb.set_trace()
             biosig_files = glob.glob(os.path.join(subset,'*PSG.edf'))    #### Biosignal files contain Polysomnography signals
             biosig_files.sort()
 
@@ -70,7 +71,6 @@ class MassDataset(Dataset):
             
             
             for (index,file) in enumerate(biosig_files):
-                # import pdb;pdb.set_trace()
                 ### ANNOTATION PROCESSING
                 annot_filename = (os.path.join(os.path.dirname(biosig_files[0]), file[-18:-8] + ' Base.edf'))
                 base4 = mne.read_annotations(annot_filename)  ##### BASE FILE CONTAIN SLEEP STAGES
@@ -87,7 +87,19 @@ class MassDataset(Dataset):
                 EEGC3_ch = [i for i in psg4.ch_names if i.startswith('EEG C3-')]
                 EEGA2_ch = [i for i in psg4.ch_names if i.startswith('EEG A2')]
 
-                ecg2= (-1)*psg4[ECG_ch[0]][0][0]    # Inverse of ideal waveform was available from dataset, so correcting it by * (-1)
+                ## CHECKING IF SIGNAL IS INVERTED FROM GROUND TRUTH
+                aasm_inv_gt = pd.read_csv("/media/Sentinel_2/Pose2/Vaibhav/MASS_CODE/SS_KD/Dataset_split/Invert_Ground_Truth_AASM.csv")
+                gt = aasm_inv_gt['Ground Truth']
+                if gt[count] == 'INV':
+                    ecg2= (-1)*psg4[ECG_ch[0]][0][0]    # Inverse of ideal waveform was available from dataset, so correcting it by * (-1)
+                else:
+                    ecg2= psg4[ECG_ch[0]][0][0]
+                count+=1
+
+                ### FILTERING OF 60 Hz
+                b, a = signal.iirnotch(60.0, 30.0, fs) #60 Hz to be filtered, at Quality factor = 30
+                outputSignal = signal.filtfilt(b, a, ecg2)
+                ecg2 = outputSignal
 
                 if EEGC3_ch == ['EEG C3-CLE']:
                     eegc3a2= psg4[EEGC3_ch[0]][0][0] - psg4[EEGA2_ch[0]][0][0]  # Getting C3 channel with A2 reference 
@@ -95,7 +107,6 @@ class MassDataset(Dataset):
                 elif EEGC3_ch == ['EEG C3-LER']:
                     eegc3a2= psg4[EEGC3_ch[0]][0][0]   # Getting C3 channel 
                 
-                # import pdb;pdb.set_trace()
                 ##### ONSET OF ANNOTATION ####
                 annot_onset = base4.onset[0] ## value in seconds
                 #### Eliminating signal with no annotation
@@ -104,8 +115,8 @@ class MassDataset(Dataset):
                 
                 ## Resampling 
                 resamp_srate= 200
-                num_windows = int(min(len(ecg2) / fs / sleep_epoch_len, len(base4)))
-                
+                #num_windows = int(min(len(ecg2) / fs / sleep_epoch_len, len(base4)))
+                num_windows = int(len(base4))
                 min_max_scaler = preprocessing.MinMaxScaler()
                 
                 ## NORMALIZATION AND WINDOWING OF INPUT SIGNALS
@@ -150,34 +161,125 @@ class MassDataset(Dataset):
             self.eeg_testc3a2 = self.eeg_testc3a2[self.slp_stg_test != -2]
             self.slp_stg_test = self.slp_stg_test[self.slp_stg_test != -2]
 
-        ## CHECKING DISTRIBUTION OF CLASSES ##
-        _,count_train = self.slp_stg_train.unique(return_counts = True)
-        _,count_val = self.slp_stg_val.unique(return_counts = True)
-        _,count_test = self.slp_stg_test.unique(return_counts = True)
+        # ## CHECKING DISTRIBUTION OF CLASSES ##
+        # _,count_train = self.slp_stg_train.unique(return_counts = True)
+        # _,count_val = self.slp_stg_val.unique(return_counts = True)
+        # _,count_test = self.slp_stg_test.unique(return_counts = True)
 
-        self.distribution = torch.stack([count_train/sum(count_train), count_val/sum(count_val), count_test/sum(count_test)],dim=0)
-        print(self.distribution)
+        # self.distribution = torch.stack([count_train/sum(count_train), count_val/sum(count_val), count_test/sum(count_test)],dim=0)
+        # print(self.distribution)
+        
         #### SAVING TRAIN-VAL-TEST DATA in PT_Files #####
-        import pdb;pdb.set_trace()
-
-        save_path = self.save_path
-
-        self.train_data = torch.stack([self.eeg_trainc3a2,self.ecg_train2],dim=0)
-        torch.save(self.train_data, save_path + 'eeg_ecg_1ch_train.pt')
-        torch.save(self.slp_stg_train, save_path + 'slp_stg_train_lbl.pt')
-
-        self.val_data = torch.stack([self.eeg_valc3a2,self.ecg_val2],dim=0)
-        torch.save(self.val_data, save_path + 'eeg_ecg_1ch_eval.pt')
-        torch.save(self.slp_stg_val, save_path + 'slp_stg_eval_lbl.pt')
+        train_eeg_data_gen = self.data_generator(self.eeg_trainc3a2)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.eeg_trainc3a2)-self.batch_size):
+            batch_eeg_train = next(train_eeg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_eeg_train.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/EEG/train/eeg_train_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_eeg_train, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/EEG/eeg_train_batch' + str(file_iter) + '.pt')
+            loop_iter+=self.batch_size
         
-        self.test_data = torch.stack([self.eeg_testc3a2,self.ecg_test2],dim=0)
-        torch.save(self.test_data, save_path + 'eeg_ecg_1ch_test.pt')
-        torch.save(self.slp_stg_test, save_path + 'slp_stg_test_lbl.pt')
+        train_ecg_data_gen = self.data_generator(self.ecg_train2)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.ecg_train2)-self.batch_size):
+            batch_ecg_train = next(train_ecg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_ecg_train.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/ECG/train/ecg_train_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_ecg_train, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/ECG/ecg_train_batch' + str(file_iter+1) + '.pt')
+            loop_iter+=self.batch_size
         
+        train_slp_stg_data_gen = self.data_generator(self.slp_stg_train)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.slp_stg_train)-self.batch_size):
+            batch_slp_stg_train = next(train_slp_stg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_slp_stg_train.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Sleep_stages/train/slp_stg_train_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_slp_stg_train, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Sleep_Stages/slp_stg_train_batch' + str(file_iter+1) + '.pt')
+            loop_iter+=self.batch_size
         
+        val_eeg_data_gen = self.data_generator(self.eeg_valc3a2)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.eeg_valc3a2)-self.batch_size):
+            batch_eeg_val = next(val_eeg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_eeg_val.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/EEG/val/eeg_val_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_eeg_val, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/EEG/eeg_val_batch' + str(file_iter+1) + '.pt')
+            loop_iter+=self.batch_size
+        
+        val_ecg_data_gen = self.data_generator(self.ecg_val2)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.ecg_val2)-self.batch_size):
+            batch_ecg_val = next(val_ecg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_ecg_val.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/ECG/val/ecg_val_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_ecg_val, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/ECG/ecg_val_batch' + str(file_iter+1) + '.pt')
+            loop_iter+=self.batch_size
+        
+        val_slp_stg_data_gen = self.data_generator(self.slp_stg_val)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.slp_stg_val)-self.batch_size):
+            batch_slp_stg_val = next(val_slp_stg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_slp_stg_val.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Sleep_stages/val/slp_stg_val_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_slp_stg_val, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Sleep_stages/slp_stg_val_batch' + str(file_iter+1) + '.pt')
+            loop_iter+=self.batch_size
+        
+        test_eeg_data_gen = self.data_generator(self.eeg_testc3a2)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.eeg_testc3a2)-self.batch_size):
+            batch_eeg_test = next(test_eeg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_eeg_test.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/EEG/test/eeg_test_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_eeg_test, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/EEG/eeg_test_batch' + str(file_iter+1) + '.pt')
+            loop_iter+=self.batch_size
+        
+        test_ecg_data_gen = self.data_generator(self.ecg_test2)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.ecg_test2)-self.batch_size):
+            batch_ecg_test = next(test_ecg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_ecg_test.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/ECG/test/ecg_test_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_ecg_test, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/ECG/ecg_test_batch' + str(file_iter+1) + '.pt')
+            loop_iter+=self.batch_size
+        
+        test_slp_stg_data_gen = self.data_generator(self.slp_stg_test)
+        loop_iter = 0
+        file_iter = 0
+        while loop_iter in range(len(self.slp_stg_test)-self.batch_size):
+            batch_slp_stg_test = next(test_slp_stg_data_gen)
+            file_iter+=1
+            array_batch = pd.DataFrame(batch_slp_stg_test.numpy())
+            array_batch.to_csv("/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Sleep_stages/test/slp_stg_test_batch_"+str(file_iter)+".csv", index = False, header = False)
+            # torch.save(batch_slp_stg_test, '/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Sleep_stages/slp_stg_test_batch' + str(file_iter+1) + '.pt')
+            loop_iter+=self.batch_size
+            
+    def data_generator(self, input_data):
+        no_of_batches = int(np.floor(len(input_data)/self.batch_size))
+        print("batches = ", no_of_batches)
+        for gen_index in range(no_of_batches):
+            #generate 1 batch of data
+            data_batch = input_data[gen_index*self.batch_size : (gen_index+1)*self.batch_size] 
+            #if no. of batches to be generated is changed from 100, reflect change in updation of self.setup_iter_tesk_aasm/rk
+            yield data_batch 
+         
     def __getitem__(self,index):
 #         # dataset indexing
-        # import pdb;pdb.set_trace()
         return self.train_data[index],self.slp_stg_train[index],self.val_data[index],self.slp_stg_val[index],self.test_data[index],self.slp_stg_test[index]
         # self.ecg_train[index],
         # self.eeg_train[index],self.slp_stg_train[index],self.ecg_test[index],self.eeg_test[index],self.slp_stg_test[index]
@@ -188,11 +290,11 @@ class MassDataset(Dataset):
 
 
 def argparsing():
-    parser = argparse.ArgumentParser(description='RUN EEG Baseline')
+    parser = argparse.ArgumentParser(description='RUN Dataset split')
     # parser.add_argument("--data_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/ALL_DATA/AASM/", help= 'Enter path to data PT files')
     parser.add_argument("--data_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/MASS_BIOSIG/", help= 'Enter path to data')
-    parser.add_argument("--save_path", default=None, help= 'Enter path to save files')
-    
+    #parser.add_argument("--save_path", default='/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/POCT/4_class/AASM/', help= 'Enter path to save files')
+    parser.add_argument("--save_path", help= 'Enter path to save files')
     args = parser.parse_args()
     return args
 

@@ -2,9 +2,10 @@ import torch
 from pytorch_lightning import seed_everything
 from pytorch_lightning import Trainer
 import utils
-import argparse
+import numpy as np
+import random
 
-torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.benchmark = False
 
 def args_help():
 
@@ -24,8 +25,10 @@ def args_help():
 def run_training(args):
     
     # Remember to seed!
-    seed_everything(42, workers=True)
-
+    seed_everything(0, workers=True)
+    torch.manual_seed(0)
+    np.random.seed(0)
+    random.seed(0)
     # Setup data module for training
     dm, args = utils.get_data(args)
 
@@ -38,13 +41,14 @@ def run_training(args):
                                     mode = args.ckpt_mode)
 
     trainer = Trainer(
-                # deterministic=True,
+                deterministic=True,
                 callbacks= callbacks,
                 min_epochs=1, 
                 max_epochs= args.max_epochs,
                 check_val_every_n_epoch=2,
                 gpus=1,
                 progress_bar_refresh_rate=1,
+                num_sanity_val_steps=0,
                 )
 
     train_loader = dm.train_dataloader()

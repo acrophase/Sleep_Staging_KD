@@ -237,7 +237,7 @@ class EEG_BASE_Model(LightningModule):
         self.val_acc_stages =  torchmetrics.Accuracy(num_classes=self.hparams.num_classes, average=None)
         self.test_acc_stages =  torchmetrics.Accuracy(num_classes=self.hparams.num_classes, average=None)
 
-        self.test_cohenkappa =  torchmetrics.CohenKappa(num_classes=self.hparams.num_classes)
+        self.test_cohenkappa = torchmetrics.CohenKappa(num_classes=self.hparams.num_classes)
         self.train_cohenkappa_accumulated = torchmetrics.CohenKappa(num_classes=self.hparams.num_classes)
         self.val_cohenkappa_accumulated = torchmetrics.CohenKappa(num_classes=self.hparams.num_classes)
         self.test_cohenkappa_accumulated = torchmetrics.CohenKappa(num_classes=self.hparams.num_classes)
@@ -290,8 +290,11 @@ class EEG_BASE_Model(LightningModule):
             self.parameters(), **self.optimizer_params
         )
     
-    def training_step(self, batch_train, batch_idx):
-        [eeg_train,ecg_train,y_train] = batch_train
+    def training_step(self, batch_train, batch_idx):    
+        # [eeg_train,ecg_train,y_train] = batch_train
+        eeg_train = batch_train[:,:6000]
+        ecg_train = batch_train[:,6001:12000]
+        y_train = batch_train[:,-1]
         ## Choose modalities to train
         x_train = eeg_train.unsqueeze(1)
 
@@ -340,8 +343,10 @@ class EEG_BASE_Model(LightningModule):
     
     def validation_step(self, batch_eval, batch_idx):
         
-        [eeg_val,ecg_val,y_val]= batch_eval
-        
+        # [eeg_val,ecg_val,y_val]= batch_eval
+        eeg_val = batch_eval[:,:6000]
+        ecg_val = batch_eval[:,6001:12000]
+        y_val = batch_eval[:,-1]
         ## Choose modalities to eval
         x_val = eeg_val.unsqueeze(1)
 
@@ -390,7 +395,10 @@ class EEG_BASE_Model(LightningModule):
 
     def test_step(self, batch_test, batch_idx):
         
-        [eeg_test,ecg_test, y_test] = batch_test
+        # [eeg_test,ecg_test, y_test] = batch_test
+        eeg_test = batch_test[:,:6000]
+        ecg_test = batch_test[:,6001:12000]
+        y_test = batch_test[:,-1]
         
         ## Choose modalities to eval
         x_test=eeg_test.unsqueeze(1)
@@ -480,10 +488,14 @@ if __name__ == "__main__":
     import sys
     sys.path.append('../')
     from datasets.mass import MassDataModule
+    from datasets.mass_batch import MASSBatchDataModule
+    from datasets.mass_batch_small import MASSBatchSmallDataModule
     from pytorch_lightning.core.memory import ModelSummary
 
     parser = ArgumentParser(add_help=False)
-    parser = MassDataModule.add_dataset_specific_args(parser)
+    # parser = MassDataModule.add_dataset_specific_args(parser)
+    parser = MASSBatchDataModule.add_dataset_specific_args(parser)
+    # parser = MASSBatchSmallDataModule.add_dataset_specific_args(parser)
     parser = EEG_BASE_Model.add_model_specific_args(parser)
     args = parser.parse_args()
 
