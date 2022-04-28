@@ -1,6 +1,8 @@
 from argparse import ArgumentParser
 import torch
 import torch.nn as nn
+import numpy as np
+import random
 from pytorch_lightning import LightningModule
 import torchmetrics
 from sklearn.metrics import accuracy_score
@@ -291,19 +293,19 @@ class EEG_BASE_Model(LightningModule):
         )
     
     def training_step(self, batch_train, batch_idx):    
-        # [eeg_train,ecg_train,y_train] = batch_train
-        eeg_train = batch_train[:,:6000]
-        ecg_train = batch_train[:,6001:12000]
-        y_train = batch_train[:,-1]
-        ## Choose modalities to train
-        x_train = eeg_train.unsqueeze(1)
+        [eeg_train,ecg_train,y_train] = batch_train
 
+        ## Choose modalities to train
+        # x_train = eeg_train.unsqueeze(1)
         y_train = torch.nn.functional.one_hot(y_train.type(torch.int64), num_classes=self.hparams.num_classes).unsqueeze(1)
-        pred_train = self.classify_segments(x_train.float(), resolution=self.hparams.epoch_length)
+        eeg_train = eeg_train.squeeze(0).unsqueeze(1)
+        y_train = y_train.squeeze(0).squeeze(0)
+        pred_train = self.classify_segments(eeg_train.float(), resolution=self.hparams.epoch_length)
         
+
         class_weights = self.train_weights
 
-        loss_train,pred_train,y_train = self.compute_loss(pred_train, y_train, class_weights)
+        loss_train,pred_train,y_train = self.compute_loss(pred_train.squeeze(-1), y_train, class_weights)
         
         self.pred_train_acc = torch.cat([self.pred_train_acc,pred_train], dim = 0)
         self.y_train_acc = torch.cat([self.y_train_acc,y_train], dim = 0)
@@ -322,14 +324,14 @@ class EEG_BASE_Model(LightningModule):
         
         pred_train_total = self.pred_train_acc
         y_train_total = self.y_train_acc
-        
-        print(self.train_conf_matrix_accumulated(pred_train_total.squeeze(1), torch.argmax(y_train_total, dim = 2).squeeze(1)))
-        train_F1_accumulated = self.train_f1_accumulated(pred_train_total.squeeze(1),torch.argmax(y_train_total, dim = 2).squeeze(1))
-        train_sklearn_accuracy = accuracy_score(torch.argmax(pred_train_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_train_total, dim = 2).squeeze(1).cpu().numpy())
+        import pdb; pdb.set_trace()
+        print(self.train_conf_matrix_accumulated(pred_train_total.squeeze(-1), torch.argmax(y_train_total, dim = 1)))
+        train_F1_accumulated = self.train_f1_accumulated(pred_train_total.squeeze(-1),torch.argmax(y_train_total, dim = 1))
+        train_sklearn_accuracy = accuracy_score(torch.argmax(pred_train_total, dim = 1).cpu().numpy(),torch.argmax(y_train_total, dim = 1).cpu().numpy())
         
         accuracy = self.train_acc_stages(pred_train_total, y_train_total.int())
         acc_dict = {'W_train_acc':accuracy[0], 'L_train_acc':accuracy[1], 'D_train_acc':accuracy[2], 'R_train_acc':accuracy[3]}
-        f1_score = self.train_f1_stages(pred_train_total.squeeze(1), torch.argmax(y_train_total, dim = 2).squeeze(1))
+        f1_score = self.train_f1_stages(pred_train_total, torch.argmax(y_train_total, dim = 1))
         f1_dict = {'W_train_f1':f1_score[0], 'L_train_f1':f1_score[1], 'D_train_f1':f1_score[2], 'R_train_f1':f1_score[3]}
 
         self.log('train_F1_accumulated', train_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -343,19 +345,19 @@ class EEG_BASE_Model(LightningModule):
     
     def validation_step(self, batch_eval, batch_idx):
         
-        # [eeg_val,ecg_val,y_val]= batch_eval
-        eeg_val = batch_eval[:,:6000]
-        ecg_val = batch_eval[:,6001:12000]
-        y_val = batch_eval[:,-1]
+        [eeg_val,ecg_val,y_val]= batch_eval
+        # y_val = torch.from_numpy(np.array([random.randint(0,2) for i in range(256)])).unsqueeze(-1)
         ## Choose modalities to eval
-        x_val = eeg_val.unsqueeze(1)
+        # x_val = eeg_val.unsqueeze(1)
 
         y_val = torch.nn.functional.one_hot(y_val.type(torch.int64), num_classes=self.hparams.num_classes).unsqueeze(1)
-        pred_val = self.classify_segments(x_val.float(), resolution=self.hparams.epoch_length)
+        eeg_val = eeg_val.squeeze(0).unsqueeze(1)
+        y_val = y_val.squeeze(0).squeeze(0)
+        pred_val = self.classify_segments(eeg_val.float(), resolution=self.hparams.epoch_length)
         
         class_weights = self.val_weights
 
-        loss_val,pred_val,y_val = self.compute_loss(pred_val, y_val, class_weights)
+        loss_val,pred_val,y_val = self.compute_loss(pred_val.squeeze(-1), y_val, class_weights)
 
         self.pred_val_acc = torch.cat([self.pred_val_acc,pred_val], dim = 0)
         self.y_val_acc = torch.cat([self.y_val_acc,y_val], dim = 0)
@@ -375,13 +377,13 @@ class EEG_BASE_Model(LightningModule):
         pred_val_total = self.pred_val_acc
         y_val_total = self.y_val_acc
 
-        print(self.val_conf_matrix_accumulated(pred_val_total.squeeze(1), torch.argmax(y_val_total, dim = 2).squeeze(1)))
-        val_F1_accumulated = self.val_f1_accumulated(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
-        val_sklearn_accuracy = accuracy_score(torch.argmax(pred_val_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_val_total, dim = 2).squeeze(1).cpu().numpy())
+        print(self.val_conf_matrix_accumulated(pred_val_total.squeeze(-1), torch.argmax(y_val_total, dim = 1)))
+        val_F1_accumulated = self.val_f1_accumulated(pred_val_total.squeeze(-1),torch.argmax(y_val_total, dim = 1))
+        val_sklearn_accuracy = accuracy_score(torch.argmax(pred_val_total, dim = 1).cpu().numpy(),torch.argmax(y_val_total, dim = 1).cpu().numpy())
         
         accuracy = self.val_acc_stages(pred_val_total,y_val_total.int())
         acc_dict = {'W_val_acc':accuracy[0], 'L_val_acc':accuracy[1], 'D_val_acc':accuracy[2], 'R_val_acc':accuracy[3]}
-        f1_score = self.val_f1_stages(pred_val_total.squeeze(1),torch.argmax(y_val_total, dim = 2).squeeze(1))
+        f1_score = self.val_f1_stages(pred_val_total,torch.argmax(y_val_total, dim = 1))
         f1_dict = {'W_val_f1':f1_score[0], 'L_val_f1':f1_score[1], 'D_val_f1':f1_score[2], 'R_val_f1':f1_score[3]}
 
         self.log('val_F1_accumulated', val_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -395,20 +397,19 @@ class EEG_BASE_Model(LightningModule):
 
     def test_step(self, batch_test, batch_idx):
         
-        # [eeg_test,ecg_test, y_test] = batch_test
-        eeg_test = batch_test[:,:6000]
-        ecg_test = batch_test[:,6001:12000]
-        y_test = batch_test[:,-1]
-        
+        [eeg_test,ecg_test, y_test] = batch_test
+
         ## Choose modalities to eval
-        x_test=eeg_test.unsqueeze(1)
+        # x_test=eeg_test.unsqueeze(1)
         
         y_test = torch.nn.functional.one_hot(y_test.type(torch.int64), num_classes=self.hparams.num_classes).unsqueeze(1)
-        pred_test = self.classify_segments(x_test.float(), resolution=self.hparams.epoch_length)
+        eeg_test = eeg_test.squeeze(0).unsqueeze(1)
+        y_test = y_test.squeeze(0).squeeze(0)
+        pred_test = self.classify_segments(eeg_test.float(), resolution=self.hparams.epoch_length)
         
         class_weights = self.test_weights
         
-        loss_test,pred_test, y_test = self.compute_loss(pred_test, y_test, class_weights)
+        loss_test,pred_test, y_test = self.compute_loss(pred_test.squeeze(-1), y_test, class_weights)
         
 
         self.pred_test_acc = torch.cat([self.pred_test_acc,pred_test], dim = 0)
@@ -433,13 +434,13 @@ class EEG_BASE_Model(LightningModule):
         pred_test_total = self.pred_test_acc
         y_test_total = self.y_test_acc
 
-        print(self.test_conf_matrix_accumulated(pred_test_total.squeeze(1), torch.argmax(y_test_total, dim = 2).squeeze(1)))
-        test_F1_accumulated = self.test_f1_accumulated(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
-        test_sklearn_accuracy = accuracy_score(torch.argmax(pred_test_total, dim = 2).squeeze(1).cpu().numpy(),torch.argmax(y_test_total, dim = 2).squeeze(1).cpu().numpy())
+        print(self.test_conf_matrix_accumulated(pred_test_total.squeeze(-1), torch.argmax(y_test_total, dim = 1)))
+        test_F1_accumulated = self.test_f1_accumulated(pred_test_total.squeeze(-1),torch.argmax(y_test_total, dim = 1))
+        test_sklearn_accuracy = accuracy_score(torch.argmax(pred_test_total, dim = 1).cpu().numpy(),torch.argmax(y_test_total, dim = 1).cpu().numpy())
         
         accuracy = self.test_acc_stages(pred_test_total, y_test_total.int())
         acc_dict = {'W_test_acc':accuracy[0], 'L_test_acc':accuracy[1], 'D_test_acc':accuracy[2], 'R_test_acc':accuracy[3]}
-        f1_score = self.test_f1_stages(pred_test_total.squeeze(1),torch.argmax(y_test_total, dim = 2).squeeze(1))
+        f1_score = self.test_f1_stages(pred_test_total,torch.argmax(y_test_total, dim = 1))
         f1_dict = {'W_test_f1':f1_score[0], 'L_test_f1':f1_score[1], 'D_test_f1':f1_score[2], 'R_test_f1':f1_score[3]}
 
         self.log('test_F1_accumulated', test_F1_accumulated,  on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
@@ -459,7 +460,7 @@ class EEG_BASE_Model(LightningModule):
             y_true = y_true.permute(dims=[0, 2, 1])
 
         self.loss = nn.CrossEntropyLoss(weight = class_weights, reduction= 'mean')
-        CE_loss = self.loss(y_pred.squeeze(1), torch.argmax(y_true, dim = 2).squeeze(1))
+        CE_loss = self.loss(y_pred, torch.argmax(y_true, dim = 1))
         
         return CE_loss,y_pred, y_true
 
@@ -494,8 +495,8 @@ if __name__ == "__main__":
 
     parser = ArgumentParser(add_help=False)
     # parser = MassDataModule.add_dataset_specific_args(parser)
-    parser = MASSBatchDataModule.add_dataset_specific_args(parser)
-    # parser = MASSBatchSmallDataModule.add_dataset_specific_args(parser)
+    # parser = MASSBatchDataModule.add_dataset_specific_args(parser)
+    parser = MASSBatchSmallDataModule.add_dataset_specific_args(parser)
     parser = EEG_BASE_Model.add_model_specific_args(parser)
     args = parser.parse_args()
 
