@@ -28,15 +28,15 @@ def run_training(args):
 
     # Setup data module for training
     dm, args = utils.get_data(args)
-
+    
     # Setup model
     model = utils.get_model(args)
-
+    import pdb;pdb.set_trace()
     # Setup callbacks    
     callbacks = utils.get_callbacks(ckpt_monitor = args.ckpt_monitor, 
                                     ckpt_name = args.model_ckpt_name, 
                                     mode = args.ckpt_mode)
-
+    import pdb;pdb.set_trace()
     trainer = Trainer(
                 # deterministic=True,
                 callbacks= callbacks,
@@ -66,7 +66,7 @@ def run_training(args):
             checkpoint_trained_feat = torch.load(PATH_trained_feat)
             model.load_state_dict(checkpoint_trained_feat['state_dict'])
     #####################################################
-
+    import pdb;pdb.set_trace()
     ### TRAINING from the CODE ###
     trainer.fit(model, train_loader, val_loader)
     print(callbacks.best_model_path)

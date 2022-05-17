@@ -1,6 +1,6 @@
 import random
 import torch
-from torch.utils.data import DataLoader,TensorDataset
+from torch.utils.data import Dataset, DataLoader, TensorDataset
 import numpy as np
 import pandas as pd
 import os
@@ -8,11 +8,7 @@ import glob
 import random
 from pytorch_lightning import seed_everything
 import pytorch_lightning as pl
-from sklearn.utils import class_weight
-from torch.utils.data import Dataset, DataLoader
 import torch
-import pytorch_lightning as pl
-import os
 
 class MASSDataset(Dataset):
     def __init__(self, eeg_path_lists, ecg_path_lists, slp_stg_path_lists):
@@ -37,12 +33,14 @@ class MASSDataset(Dataset):
                 self.slp_stg_path_lists.append(sorted(os.listdir(self.slp_stg_path_list_dir[j]))[k])
         self.len_list = [0]
         # self.iter = 0
-        len_sum = 0
-        self.eeg_file_path_list = []
-        self.ecg_file_path_list = []
-        self.slp_stg_file_path_list = []
-        self.eeg_data = self.ecg_data = self.slp_stg_data = torch.Tensor([])
-        self.file_path_iter = 0
+        # len_sum = 0
+        # self.eeg_file_path_list = []
+        # self.ecg_file_path_list = []
+        # # self.slp_stg_file_path_list = []
+        # self.eeg_data  = torch.Tensor([])
+        # self.ecg_data
+        # self.slp_stg_data = torch.Tensor([])
+        # self.file_path_iter = 0
         # for i in range(len(self.eeg_path_lists)):
         # self.eeg_file_path_list = sorted(os.listdir(self.eeg_path_lists))
         # self.ecg_file_path_list = sorted(os.listdir(self.ecg_path_lists))
@@ -90,7 +88,6 @@ class MASSDataset(Dataset):
         eeg_path = os.path.join(self.eeg_path_list_dir[aasm_rk_name], self.eeg_path_lists[idx])
         ecg_path = os.path.join(self.ecg_path_list_dir[aasm_rk_name], self.ecg_path_lists[idx])
         slp_stg_path = os.path.join(self.slp_stg_path_list_dir[aasm_rk_name], self.slp_stg_path_lists[idx])
-        print(eeg_path)
         # tens_eeg = torch.from_numpy(np.genfromtxt(eeg_path, delimiter=","))
         # tens_ecg = torch.from_numpy(np.genfromtxt(ecg_path, delimiter=","))
         # tens_slp_stg = torch.from_numpy(np.genfromtxt(slp_stg_path, delimiter=","))
@@ -105,25 +102,27 @@ class MASSDataset(Dataset):
         eeg_file_data = torch.tensor(np.genfromtxt(eeg_path, delimiter=","))
         ecg_file_data = torch.tensor(np.genfromtxt(ecg_path, delimiter=","))
         slp_stg_file_data = torch.tensor(np.genfromtxt(slp_stg_path, delimiter=","))      
-                
+        print(eeg_path)
+        print("eeg_data_size", len(eeg_file_data))    
         return eeg_file_data, ecg_file_data, slp_stg_file_data
 
 class MASSBatchSmallDataModule(pl.LightningDataModule):
     def __init__(self, *args, **kwargs):
-        self.n_workers = 1
+        self.n_workers = 32
+        self.batch_size = 256
         self.eeg_train = self.eeg_val = self.eeg_test = torch.Tensor([])
         self.ecg_train = self.ecg_val = self.ecg_test = torch.Tensor([])
         self.slp_stg_train = self.slp_stg_val = self.slp_stg_test = torch.Tensor([])
 
         # SMALL DATASET #
-        # self.train_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/EEG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/EEG/train/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/ECG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/ECG/train/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/Sleep_stages/train/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/Sleep_stages/train/'])
-        # self.val_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/EEG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/EEG/val/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/ECG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/ECG/val/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/Sleep_stages/val/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/Sleep_stages/val/'])
-        # self.test_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/EEG/test','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/EEG/test/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/ECG/test','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/ECG/test/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/Sleep_stages/test/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/Sleep_stages/test/'])
+        self.train_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/EEG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/EEG/train/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/ECG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/ECG/train/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/Sleep_stages/train/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/Sleep_stages/train/'])
+        self.val_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/EEG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/EEG/val/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/ECG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/ECG/val/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/Sleep_stages/val/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/Sleep_stages/val/'])
+        self.test_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/EEG/test','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/EEG/test/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/ECG/test','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/ECG/test/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/AASM/Sleep_stages/test/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Small_Batchwise_Data/4_class/RK/Sleep_stages/test/'])
         
         # 50 BATCHES DATASET #
-        self.train_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/EEG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/EEG/train/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/ECG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/ECG/train/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/Sleep_stages/train/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/Sleep_stages/train/'])
-        self.val_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/EEG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/EEG/val/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/ECG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/ECG/val/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/Sleep_stages/val/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/Sleep_stages/val/'])
-        self.test_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/EEG/test','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/EEG/test/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/ECG/test','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/ECG/test/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/Sleep_stages/test/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/Sleep_stages/test/'])
+        # self.train_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/EEG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/EEG/train/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/ECG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/ECG/train/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/Sleep_stages/train/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/Sleep_stages/train/'])
+        # self.val_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/EEG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/EEG/val/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/ECG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/ECG/val/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/Sleep_stages/val/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/Sleep_stages/val/'])
+        # self.test_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/EEG/test','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/EEG/test/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/ECG/test','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/ECG/test/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/AASM/Sleep_stages/test/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Fifty_Batchwise_Data/4_class/RK/Sleep_stages/test/'])
         # FULL DATASET #
         # self.train_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/EEG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/RK/EEG/train/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/ECG/train','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/RK/ECG/train/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Sleep_stages/train/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/RK/Sleep_stages/train/'])
         # self.val_dataset = MASSDataset(eeg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/EEG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/RK/EEG/val/'], ecg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/ECG/val','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/RK/ECG/val/'], slp_stg_path_lists=['/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Sleep_stages/val/','/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/RK/Sleep_stages/val/'])
@@ -140,19 +139,13 @@ class MASSBatchSmallDataModule(pl.LightningDataModule):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset,num_workers=self.n_workers)
+        return DataLoader(self.train_dataset,num_workers=self.n_workers, batch_size=self.batch_size)
     def val_dataloader(self):
-        return DataLoader(self.val_dataset,num_workers=self.n_workers, pin_memory=True)
+        return DataLoader(self.val_dataset,num_workers=self.n_workers, pin_memory=True, batch_size=self.batch_size)
     def test_dataloader(self):
-        return DataLoader(self.test_dataset,num_workers=self.n_workers)
+        return DataLoader(self.test_dataset,num_workers=self.n_workers, batch_size=self.batch_size)
 
 
-# mass_dataset = MASSDataset('/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Batchwise_Data/4_class/AASM/Biosig_files')
-# train_loader = DataLoader(mass_dataset)
-
-# for idx, tensor in enumerate(train_loader):
-#     eeg_sample = tensor
-#     print("mean is", eeg_sample.mean())
     @staticmethod
     def add_dataset_specific_args(parent_parser):
         from argparse import ArgumentParser
@@ -162,9 +155,10 @@ class MASSBatchSmallDataModule(pl.LightningDataModule):
         # dataset_group = parser.add_argument_group("dataset")
         dataloader_group = parser.add_argument_group("dataloader")
         dataloader_group.add_argument("--batch_size", default=256, type=int)
-        dataloader_group.add_argument("--n_workers", default=1, type=int)
+        dataloader_group.add_argument("--n_workers", default=32, type=int)
 
         return parser
+        
 if __name__ == "__main__":
     seed_everything(0, workers=True)
     torch.manual_seed(0)
