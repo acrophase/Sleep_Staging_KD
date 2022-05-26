@@ -202,7 +202,7 @@ def argparsing():
     parser = argparse.ArgumentParser(description='RUN EEG Baseline')
     # parser.add_argument("--data_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/eeg_ecg_1ch_subjectwisesplit/ALL_DATA/AASM/", help= 'Enter path to data PT files')
     parser.add_argument("--data_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/MASS_BIOSIG/", help= 'Enter path to data')
-    parser.add_argument("--save_path", default=None, help= 'Enter path to save files')
+    parser.add_argument("--save_path", default="/media/Sentinel_2/Dataset/Vaibhav/MASS/PT_FILES/Inversion_Implemented_PTFiles/4_class/R_K_30s/", help= 'Enter path to save files')
     
     args = parser.parse_args()
     return args
